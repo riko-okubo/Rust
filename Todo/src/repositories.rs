@@ -108,7 +108,7 @@ impl TodoRepositoryForMemory {
         Ok(todo)
     }
 
-    fn deleted(&self, id: i32) -> anyhow::Result<()> {
+    fn delete(&self, id: i32) -> anyhow::Result<()> {
         let mut store = self.write_store_ref();
         store.remove(&id).ok_or(RepositoryError::NotFound(id))?;
         Ok(())
@@ -130,10 +130,59 @@ impl TodoRepository for TodoRepositoryForMemory {
     }
 
     fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
-        todo!()
+        todo!();
     }
 
     fn delete(&self, id: i32) -> anyhow::Result<()> {
         todo!();
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn todo_crud_scenario() {
+        let text = "todo text".to_string();
+        let id = 1;
+        let expected = Todo::new(id, text.clone());
+
+        // create
+        let repository = TodoRepositoryForMemory::new();
+        let todo = repository.create(CreateTodo { text });
+        assert_eq!(expected, todo);
+
+        // find
+        let todo = repository.find(todo.id).unwrap();
+        assert_eq!(expected, todo);
+
+        // all
+        let todo = repository.all();
+        assert_eq!(vec![expected], todo);
+
+        // updae
+        let text = "update todo text".to_string();
+        let todo = repository
+            .update(
+                1,
+                UpdateTodo {
+                    text: Some(text.clone()),
+                    completed: Some(true),
+                }
+            )
+            .expect("failed update todo.");
+        assert_eq!(
+            Todo {
+                id,
+                text,
+                completed: true,
+            },
+            todo
+        );
+
+        // delete
+        let res = repository.delete(id);
+        assert!(res.is_ok())
     }
 }
