@@ -36,7 +36,6 @@ async fn main() {
 fn create_app<T: TodoRepository>(repository: T) -> Router { //repositoryを引数に取ることで、テスト時にモックを渡せるようにする
     Router::new()
         .route("/", get(root))
-        .route("/users", post(create_user))
         .route("/todos", post(create_todo::<T>))
         .layer(Extension(Arc::new(repository)))
 }
@@ -54,30 +53,6 @@ pub async fn create_todo<T: TodoRepository>(
 // ルートハンドラーは `async fn` でなければならない
 async fn root() -> &'static str {
     "Hello, world!"
-}
-
-async fn create_user(
-    //ここでDeserializeを実装した構造体を受け取る
-    Json(payload): Json<CreateUser>,
-) -> impl IntoResponse {
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
-
-    (StatusCode::CREATED, Json(user))
-}
-
-//current_user関数と関連する構造体
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct CreateUser {
-    username: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct User {
-    id: u64,
-    username: String,
 }
 
 // point 1**（リポジトリで発生し得るエラーを定義）
@@ -168,10 +143,7 @@ impl TodoRepository for TodoRepositoryForMemory {
 #[cfg(test)]
 mod test {
     use super::*;
-    use axum::{
-        body::Body,
-        http::{header, Method, Request},
-    };
+    use axum::{body::Body, http::Request};
     use tower::ServiceExt;
 
     // axum;;http;;Request::builder()でリクエストを作成する
@@ -187,28 +159,5 @@ mod test {
         let bytes = hyper::body::to_bytes(res.into_body()).await.unwrap();  //Bytes型からString型に変換する
         let body: String = String::from_utf8(bytes.to_vec()).unwrap();
         assert_eq!(body, "Hello, world!");
-    }
-
-    #[tokio::test]  //JSON bodyのテスト
-    async fn should_return_user_data() {
-        let repository = TodoRepositoryForMemory::new();
-        let req = Request::builder()
-            .uri("/users")
-            .method(Method::POST) //POST,contents-typeは、axum::httpのconstで定義されている
-            .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref()) //application/jsonは、mimeのパッケージで定義されている
-            .body(Body::from(r#"{"username": "大久保 璃子"}"#))
-            .unwrap();
-        let res = create_app(repository).oneshot(req).await.unwrap();
-
-        let bytes = hyper::body::to_bytes(res.into_body()).await.unwrap(); 
-        let body: String = String::from_utf8(bytes.to_vec()).unwrap();
-        let user: User = serde_json::from_str(&body).expect("cannot conver User instance.");    //JSONをUser型に変換する
-        assert_eq!(
-            user,
-            User {
-                id: 1337,
-                username: "大久保 璃子".to_string(),
-            }
-        );
     }
 }
