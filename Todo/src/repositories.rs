@@ -3,10 +3,10 @@ use std::{
     sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
+use anyhow::Context;
+// use axum::extract::{Path, Extension};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
-use anyhow::{Context, Ok};
 
 #[derive(Debug, Error)] //リポジトリで発生し得るエラーを定義
 enum RepositoryError {
@@ -34,6 +34,13 @@ pub struct Todo {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct CreateTodo {
     text: String,
+}
+
+#[cfg(test)]
+impl CreateTodo {
+    pub fn new(text: String) -> Self {
+        Self { text }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -74,7 +81,10 @@ impl TodoRepositoryForMemory {
         self.store.read().unwrap()
     }
 
-    fn create(&self, payload: CreateTodo) -> Todo {
+}
+
+impl TodoRepository for TodoRepositoryForMemory {
+     fn create(&self, payload: CreateTodo) -> Todo {
         let mut store = self.write_store_ref();
         let id = (store.len() + 1) as i32;  //保存済みの長さ＋１、asは明示的な型の変換
         let todo = Todo::new(id, payload.text.clone());
@@ -114,28 +124,6 @@ impl TodoRepositoryForMemory {
         Ok(())
     }
 
-}
-
-impl TodoRepository for TodoRepositoryForMemory {
-    fn create(&self, payload: CreateTodo) -> Todo {
-        todo!();
-    }
-
-    fn find(&self, id: i32) -> Option<Todo> {
-        todo!();
-    }
-
-    fn all(&self) -> Vec<Todo> {
-        todo!();
-    }
-
-    fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
-        todo!();
-    }
-
-    fn delete(&self, id: i32) -> anyhow::Result<()> {
-        todo!();
-    }
 }
 
 #[cfg(test)]
