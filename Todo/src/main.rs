@@ -93,18 +93,7 @@ mod test {
         assert_eq!(expected, todo);
     }
 
-    async fn should_return_hello_world() {
-        let repository = TodoRepositoryForMemory::new();
-        let req = Request::builder().uri("/").body(Body::empty()).unwrap();
-        let res = create_app(repository).oneshot(req).await.unwrap();
-
-        let bytes = hyper::body::to_bytes(res.into_body()).await.unwrap();  //Bytes型からString型に変換する
-        let body: String = String::from_utf8(bytes.to_vec()).unwrap();
-        assert_eq!(body, "Hello, world!");
-    }
-
     // create以外はリクエストする前にrepository.create()でデータを作成しておく
-
     #[tokio::test]
     async fn should_find_todo() {
         let expected = Todo::new(1, "should_find_todo".to_string());
