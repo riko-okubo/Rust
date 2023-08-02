@@ -1,25 +1,21 @@
-import { useState, FC } from "react";
+import { useEffect, useState, FC } from "react";
 import "modern-css-reset";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Box, Stack, Typography } from "@mui/material";
 import { NewTodoPayload, Todo } from "./types/todo";
 import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
+import { addTodoItem, getTodoItems } from "./lib/api/todo";
 
 const TodoApp: FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const createId = () => todos.length + 1;
 
   const onSubmit = async (payload: NewTodoPayload) => {
     if (!payload.text) return;
-    setTodos((prev) => [
-      {
-        id: createId(),
-        text: payload.text,
-        completed: false,
-      },
-      ...prev,
-    ]);
+    await addTodoItem(payload);
+    //APIより再度Todo配列を取得
+    const todos = await getTodoItems();
+    setTodos(todos);
   };
 
   const onUpdate = (updateTodo: Todo) => {
@@ -35,6 +31,13 @@ const TodoApp: FC = () => {
       })
     );
   };
+
+  useEffect(() => {
+    (async () => {
+      const todos = await getTodoItems();
+      setTodos(todos);
+    })(); //即時関数とは、関数を定義した直後に実行する関数のこと
+  }, []);
 
   return (
     <>
