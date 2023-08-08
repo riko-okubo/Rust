@@ -2,16 +2,9 @@ use anyhow::Ok;
 use axum::async_trait;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-use thiserror::Error;
 use validator::Validate;
 
-#[derive(Debug, Error)] //リポジトリで発生し得るエラーを定義
-enum RepositoryError {
-    #[error("Unexpected Error: [{0}]")]
-    Unexpected(String),
-    #[error("NotFound, id is {0}")]
-    NotFound(i32),
-}
+use super::RepositoryError;
 
 #[derive(Debug, Clone)]
 pub struct TodoRepositoryForDb {
@@ -156,7 +149,7 @@ mod test {
             .expect(&format!("fail connect database, url is [{}]", database_url));
 
         let repository = TodoRepositoryForDb::new(pool.clone());
-        let todo_text = "[crud_scenerio] text";
+        let todo_text = "[crud_scenario] text";
 
         // create
         let created = repository
@@ -178,7 +171,7 @@ mod test {
         assert_eq!(created, *todo);
 
         // update
-        let updated_text = "[crud_scenerio] updated text";
+        let updated_text = "[crud_scenario] updated text";
         let todo = repository
             .update(
                 todo.id,
@@ -333,7 +326,7 @@ pub mod test_utils {
             let todo = repository.all().await.expect("failed get all todo");
             assert_eq!(vec![expected], todo);
 
-            // updae
+            // update
             let text = "update todo text".to_string();
             let todo = repository
                 .update(
