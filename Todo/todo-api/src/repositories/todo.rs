@@ -243,7 +243,7 @@ pub mod test_utils {
     impl TodoRepositoryForMemory {
         pub fn new() -> Self {
             TodoRepositoryForMemory {
-                store: Arc::default(),
+                store: Arc::default(),//default()
             }
         }
 
