@@ -193,6 +193,7 @@ mod test {
         let res = repository.find(todo.id).await; //expect not found err
         assert!(res.is_err());
 
+        // delete cascade（削除された主キーと同じ値の外部キーを持つすべての行を削除）
         let todo_rows= sqlx::query(
             r#"
             select * from todos where id=$1
